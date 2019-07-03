@@ -1,0 +1,107 @@
+# load MNIST data set
+from keras.datasets import mnist	 	#dataset
+
+(X_train, Y_train), (X_test, Y_test) = mnist.load_data() 	#Keras function
+
+print ("mnist data downloaded...")
+
+
+
+import matplotlib.pyplot as plt			#to plot images
+
+plt.subplot(221)	
+plt.imshow(X_train[50], cmap=plt.get_cmap('gray')) # ploting first image of training data set
+plt.subplot(222)
+plt.imshow(X_train[1304], cmap=plt.get_cmap('gray'))	# ploting 135th image in training data set
+plt.subplot(223)
+plt.imshow(X_test[244], cmap=plt.get_cmap('gray'))	# ploting 2445th image of test date set
+plt.subplot(224)
+plt.imshow(X_test[39], cmap=plt.get_cmap('gray'))	# ploting 4th image of test data set
+# show the plot
+plt.show()
+
+
+# Print shape of dataset..it will print three tuples, namely the no. of images in dataset, height and width(60000, 28, 28)
+
+print (X_train.shape)
+
+
+# Step 3: Preprocess input data for Keras
+
+# flatten 28*28 images to a 784 vector for each image and pixel precision set to 32 bit
+num_pixels = X_train.shape[1] * X_train.shape[2]
+X_train = X_train.reshape(X_train.shape[0], num_pixels).astype('float32')
+X_test = X_test.reshape(X_test.shape[0], num_pixels).astype('float32')
+
+# normalize inputs from 0-255 to 0-1
+X_train = X_train / 255
+X_test = X_test / 255
+
+# Step 4: Preprocess class labels
+# check shape of our class label data
+
+print (Y_train.shape)
+
+
+
+#check labels for the first 10 training samples:
+print (Y_train[:10])
+# output of the form [5 0 4 1 9 2 1 3 1 4]
+#The Y_train and Y_test data are not split into 10 distinct class labels, but rather are represented as a single array with the class values.
+
+
+
+from keras.utils import np_utils		#for transforming data 
+
+# Convert 1-dimensional class arrays to 10-dimensional class matrices
+Y_train = np_utils.to_categorical(Y_train)
+Y_test = np_utils.to_categorical(Y_test)
+num_classes = Y_test.shape[1]
+
+# check again	
+print (Y_train.shape)
+# (60000, 10)
+print (Y_train[:5])
+
+
+# Define model architecture
+
+from keras.models import Sequential		#model
+from keras.layers import Dense			#layer
+from keras.layers import Dropout		#layer
+from keras import initializers      # for importing initializers of keras
+
+model = Sequential()
+model.add(Dense(num_pixels, input_dim=num_pixels, kernel_initializer=initializers.RandomNormal(), activation='relu')) #only one hidden layer with relu as activation function
+#model.add(Dense(num_pixels, input_dim=num_pixels, kernel_initializer=initializers.Constant(value=5), activation='relu')) #only one hidden layer with relu as activation function	
+model.add(Dense(num_classes, kernel_initializer='normal', activation='softmax'))					#output layer with softmax as activation function
+
+
+#print(model.summary())
+
+
+
+# Compile model
+
+model.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
+
+print ("Compilation done ...")
+
+
+#Train model
+
+
+model.fit(X_train, Y_train,validation_split=0.2, epochs=2, batch_size=200, verbose=1)
+
+
+print ("parameter tuning done...")
+
+
+
+# Step 8: Evaluate model
+scores = model.evaluate(X_test, Y_test)
+print("Error: %.2f%%" % (100-scores[1]*100))
+print (model.summary())
+
+
+
